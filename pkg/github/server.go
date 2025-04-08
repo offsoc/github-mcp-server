@@ -8,6 +8,7 @@ import (
 	"io"
 	"net/http"
 
+	"github.com/github/github-mcp-server/pkg/features"
 	"github.com/github/github-mcp-server/pkg/translations"
 	"github.com/google/go-github/v69/github"
 	"github.com/mark3labs/mcp-go/mcp"
@@ -15,7 +16,7 @@ import (
 )
 
 // NewServer creates a new GitHub MCP server with the specified GH client and logger.
-func NewServer(client *github.Client, version string, readOnly bool, t translations.TranslationHelperFunc) *server.MCPServer {
+func NewServer(client *github.Client, featureSet *features.FeatureSet, version string, readOnly bool, t translations.TranslationHelperFunc) *server.MCPServer {
 	// Create a new MCP server
 	s := server.NewMCPServer(
 		"github-mcp-server",
@@ -23,60 +24,75 @@ func NewServer(client *github.Client, version string, readOnly bool, t translati
 		server.WithResourceCapabilities(true, true),
 		server.WithLogging())
 
-	// Add GitHub Resources
-	s.AddResourceTemplate(GetRepositoryResourceContent(client, t))
-	s.AddResourceTemplate(GetRepositoryResourceBranchContent(client, t))
-	s.AddResourceTemplate(GetRepositoryResourceCommitContent(client, t))
-	s.AddResourceTemplate(GetRepositoryResourceTagContent(client, t))
-	s.AddResourceTemplate(GetRepositoryResourcePrContent(client, t))
-
-	// Add GitHub tools - Issues
-	s.AddTool(GetIssue(client, t))
-	s.AddTool(SearchIssues(client, t))
-	s.AddTool(ListIssues(client, t))
-	s.AddTool(GetIssueComments(client, t))
-	if !readOnly {
-		s.AddTool(CreateIssue(client, t))
-		s.AddTool(AddIssueComment(client, t))
-		s.AddTool(UpdateIssue(client, t))
-	}
-
-	// Add GitHub tools - Pull Requests
-	s.AddTool(GetPullRequest(client, t))
-	s.AddTool(ListPullRequests(client, t))
-	s.AddTool(GetPullRequestFiles(client, t))
-	s.AddTool(GetPullRequestStatus(client, t))
-	s.AddTool(GetPullRequestComments(client, t))
-	s.AddTool(GetPullRequestReviews(client, t))
-	if !readOnly {
-		s.AddTool(MergePullRequest(client, t))
-		s.AddTool(UpdatePullRequestBranch(client, t))
-		s.AddTool(CreatePullRequestReview(client, t))
-		s.AddTool(CreatePullRequest(client, t))
-	}
-
-	// Add GitHub tools - Repositories
-	s.AddTool(SearchRepositories(client, t))
-	s.AddTool(GetFileContents(client, t))
-	s.AddTool(ListCommits(client, t))
-	if !readOnly {
-		s.AddTool(CreateOrUpdateFile(client, t))
-		s.AddTool(CreateRepository(client, t))
-		s.AddTool(ForkRepository(client, t))
-		s.AddTool(CreateBranch(client, t))
-		s.AddTool(PushFiles(client, t))
-	}
-
-	// Add GitHub tools - Search
-	s.AddTool(SearchCode(client, t))
-	s.AddTool(SearchUsers(client, t))
-
 	// Add GitHub tools - Users
-	s.AddTool(GetMe(client, t))
+	s.AddTool(GetMe(client, t)) // GetMe is always exposed and not part of configurable features
 
-	// Add GitHub tools - Code Scanning
-	s.AddTool(GetCodeScanningAlert(client, t))
-	s.AddTool(ListCodeScanningAlerts(client, t))
+	if featureSet.IsEnabled("repos") {
+		// Add GitHub Repository Resources
+		s.AddResourceTemplate(GetRepositoryResourceContent(client, t))
+		s.AddResourceTemplate(GetRepositoryResourceBranchContent(client, t))
+		s.AddResourceTemplate(GetRepositoryResourceCommitContent(client, t))
+		s.AddResourceTemplate(GetRepositoryResourceTagContent(client, t))
+		s.AddResourceTemplate(GetRepositoryResourcePrContent(client, t))
+
+		// Add GitHub tools - Repositories
+		s.AddTool(SearchRepositories(client, t))
+		s.AddTool(GetFileContents(client, t))
+		s.AddTool(ListCommits(client, t))
+		if !readOnly {
+			s.AddTool(CreateOrUpdateFile(client, t))
+			s.AddTool(CreateRepository(client, t))
+			s.AddTool(ForkRepository(client, t))
+			s.AddTool(CreateBranch(client, t))
+			s.AddTool(PushFiles(client, t))
+		}
+	}
+
+	if featureSet.IsEnabled("issues") {
+		// Add GitHub tools - Issues
+		s.AddTool(GetIssue(client, t))
+		s.AddTool(SearchIssues(client, t))
+		s.AddTool(ListIssues(client, t))
+		s.AddTool(GetIssueComments(client, t))
+		if !readOnly {
+			s.AddTool(CreateIssue(client, t))
+			s.AddTool(AddIssueComment(client, t))
+			s.AddTool(UpdateIssue(client, t))
+		}
+	}
+
+	if featureSet.IsEnabled("pull_requests") {
+		// Add GitHub tools - Pull Requests
+		s.AddTool(GetPullRequest(client, t))
+		s.AddTool(ListPullRequests(client, t))
+		s.AddTool(GetPullRequestFiles(client, t))
+		s.AddTool(GetPullRequestStatus(client, t))
+		s.AddTool(GetPullRequestComments(client, t))
+		s.AddTool(GetPullRequestReviews(client, t))
+		if !readOnly {
+			s.AddTool(MergePullRequest(client, t))
+			s.AddTool(UpdatePullRequestBranch(client, t))
+			s.AddTool(CreatePullRequestReview(client, t))
+			s.AddTool(CreatePullRequest(client, t))
+		}
+	}
+
+	if featureSet.IsEnabled("search") {
+		// Add GitHub tools - Search
+		s.AddTool(SearchCode(client, t))
+		s.AddTool(SearchUsers(client, t))
+	}
+
+	if featureSet.IsEnabled("code_security") {
+		// Add GitHub tools - Code Scanning
+		s.AddTool(GetCodeScanningAlert(client, t))
+		s.AddTool(ListCodeScanningAlerts(client, t))
+	}
+
+	if featureSet.IsEnabled("experiments") {
+		s.AddTool(ListAvailableFeatures(featureSet, t))
+	}
+
 	return s
 }
 
@@ -106,6 +122,26 @@ func GetMe(client *github.Client, t translations.TranslationHelperFunc) (tool mc
 			r, err := json.Marshal(user)
 			if err != nil {
 				return nil, fmt.Errorf("failed to marshal user: %w", err)
+			}
+
+			return mcp.NewToolResultText(string(r)), nil
+		}
+}
+
+func ListAvailableFeatures(featureSet *features.FeatureSet, t translations.TranslationHelperFunc) (tool mcp.Tool, handler server.ToolHandlerFunc) {
+	return mcp.NewTool("list_available_features",
+			mcp.WithDescription(t("TOOL_LIST_AVAILABLE_FEATURES_DESCRIPTION", "List all available features this MCP server can offer, providing the enabled status of each.")),
+		),
+		func(_ context.Context, _ mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+			// We need to convert the FeatureSet back to a map for JSON serialization
+			featureMap := make(map[string]bool)
+			for name := range featureSet.Features {
+				featureMap[name] = featureSet.IsEnabled(name)
+			}
+
+			r, err := json.Marshal(featureMap)
+			if err != nil {
+				return nil, fmt.Errorf("failed to marshal features: %w", err)
 			}
 
 			return mcp.NewToolResultText(string(r)), nil

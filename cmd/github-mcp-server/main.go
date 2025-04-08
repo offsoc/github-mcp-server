@@ -9,8 +9,10 @@ import (
 	stdlog "log"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 
+	"github.com/github/github-mcp-server/pkg/features"
 	"github.com/github/github-mcp-server/pkg/github"
 	iolog "github.com/github/github-mcp-server/pkg/log"
 	"github.com/github/github-mcp-server/pkg/translations"
@@ -46,6 +48,12 @@ var (
 			if err != nil {
 				stdlog.Fatal("Failed to initialize logger:", err)
 			}
+			enabledFeatures := viper.GetStringSlice("features")
+			features, err := initFeatures(enabledFeatures)
+			if err != nil {
+				stdlog.Fatal("Failed to initialize features:", err)
+			}
+
 			logCommands := viper.GetBool("enable-command-logging")
 			cfg := runConfig{
 				readOnly:           readOnly,
@@ -53,6 +61,7 @@ var (
 				logCommands:        logCommands,
 				exportTranslations: exportTranslations,
 				prettyPrintJSON:    prettyPrintJSON,
+				features:           features,
 			}
 			if err := runStdioServer(cfg); err != nil {
 				stdlog.Fatal("failed to run stdio server:", err)
@@ -61,10 +70,45 @@ var (
 	}
 )
 
+func initFeatures(passedFeatures []string) (*features.FeatureSet, error) {
+	// Create a new feature set
+	fs := features.NewFeatureSet()
+
+	// Define all available features with their default state (disabled)
+	fs.AddFeature("repos", "Repository related tools", false)
+	fs.AddFeature("issues", "Issues related tools", false)
+	fs.AddFeature("search", "Search related tools", false)
+	fs.AddFeature("pull_requests", "Pull request related tools", false)
+	fs.AddFeature("code_security", "Code security related tools", false)
+	fs.AddFeature("experiments", "Experimental features that are not considered stable yet", false)
+
+	// fs.AddFeature("actions", "GitHub Actions related tools", false)
+	// fs.AddFeature("projects", "GitHub Projects related tools", false)
+	// fs.AddFeature("secret_protection", "Secret protection related tools", false)
+	// fs.AddFeature("gists", "Gist related tools", false)
+
+	// Env gets precedence over command line flags
+	if envFeats := os.Getenv("GITHUB_FEATURES"); envFeats != "" {
+		passedFeatures = []string{}
+		// Split envFeats by comma, trim whitespace, and add to the slice
+		for _, feature := range strings.Split(envFeats, ",") {
+			passedFeatures = append(passedFeatures, strings.TrimSpace(feature))
+		}
+	}
+
+	// Enable the requested features
+	if err := fs.EnableFeatures(passedFeatures); err != nil {
+		return nil, err
+	}
+
+	return fs, nil
+}
+
 func init() {
 	cobra.OnInitialize(initConfig)
 
 	// Add global flags that will be shared by all commands
+	rootCmd.PersistentFlags().StringSlice("features", []string{"repos", "issues", "pull_requests", "search"}, "A comma separated list of groups of tools to enable, defaults to issues/repos/search")
 	rootCmd.PersistentFlags().Bool("read-only", false, "Restrict the server to read-only operations")
 	rootCmd.PersistentFlags().String("log-file", "", "Path to log file")
 	rootCmd.PersistentFlags().Bool("enable-command-logging", false, "When enabled, the server will log all command requests and responses to the log file")
@@ -73,6 +117,7 @@ func init() {
 	rootCmd.PersistentFlags().Bool("pretty-print-json", false, "Pretty print JSON output")
 
 	// Bind flag to viper
+	_ = viper.BindPFlag("features", rootCmd.PersistentFlags().Lookup("features"))
 	_ = viper.BindPFlag("read-only", rootCmd.PersistentFlags().Lookup("read-only"))
 	_ = viper.BindPFlag("log-file", rootCmd.PersistentFlags().Lookup("log-file"))
 	_ = viper.BindPFlag("enable-command-logging", rootCmd.PersistentFlags().Lookup("enable-command-logging"))
@@ -113,6 +158,7 @@ type runConfig struct {
 	logCommands        bool
 	exportTranslations bool
 	prettyPrintJSON    bool
+	features           *features.FeatureSet
 }
 
 // JSONPrettyPrintWriter is a Writer that pretty prints input to indented JSON
@@ -158,7 +204,7 @@ func runStdioServer(cfg runConfig) error {
 	t, dumpTranslations := translations.TranslationHelper()
 
 	// Create
-	ghServer := github.NewServer(ghClient, version, cfg.readOnly, t)
+	ghServer := github.NewServer(ghClient, cfg.features, version, cfg.readOnly, t)
 	stdioServer := server.NewStdioServer(ghServer)
 
 	stdLogger := stdlog.New(cfg.logger.Writer(), "stdioserver", 0)

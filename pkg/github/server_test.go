@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/github/github-mcp-server/pkg/features"
 	"github.com/github/github-mcp-server/pkg/translations"
 	"github.com/google/go-github/v69/github"
 	"github.com/migueleliasweb/go-github-mock/src/mock"
@@ -631,6 +632,105 @@ func TestOptionalPaginationParams(t *testing.T) {
 				assert.NoError(t, err)
 				assert.Equal(t, tc.expected, result)
 			}
+		})
+	}
+}
+
+func Test_ListAvailableFeatures(t *testing.T) {
+	// Verify tool definition
+	featureSet := features.NewFeatureSet()
+
+	// Add some features with different states
+	featureSet.AddFeature("feature1", "Test feature 1", true)
+	featureSet.AddFeature("feature2", "Test feature 2", false)
+	featureSet.AddFeature("feature3", "Test feature 3", true)
+
+	// Test ListAvailableFeatures tool definition
+	tool, _ := ListAvailableFeatures(featureSet, translations.NullTranslationHelper)
+	assert.Equal(t, "list_available_features", tool.Name)
+	assert.NotEmpty(t, tool.Description)
+	assert.Empty(t, tool.InputSchema.Required) // No required parameters
+
+	tests := []struct {
+		name            string
+		featureSet      *features.FeatureSet
+		requestArgs     map[string]interface{}
+		expectError     bool
+		expectedErrMsg  string
+		expectedEnabled map[string]bool
+	}{
+		{
+			name: "regular feature set",
+			featureSet: func() *features.FeatureSet {
+				fs := features.NewFeatureSet()
+				fs.AddFeature("feature1", "Test feature 1", true)
+				fs.AddFeature("feature2", "Test feature 2", false)
+				fs.AddFeature("feature3", "Test feature 3", true)
+				return fs
+			}(),
+			requestArgs: map[string]interface{}{},
+			expectError: false,
+			expectedEnabled: map[string]bool{
+				"feature1": true,
+				"feature2": false,
+				"feature3": true,
+			},
+		},
+		{
+			name:            "empty feature set",
+			featureSet:      features.NewFeatureSet(),
+			requestArgs:     map[string]interface{}{},
+			expectError:     false,
+			expectedEnabled: map[string]bool{},
+		},
+		{
+			name: "feature set with everything enabled",
+			featureSet: func() *features.FeatureSet {
+				fs := features.NewFeatureSet()
+				fs.AddFeature("feature1", "Test feature 1", false)
+				fs.AddFeature("feature2", "Test feature 2", false)
+				_ = fs.EnableFeature("everything")
+				return fs
+			}(),
+			requestArgs: map[string]interface{}{},
+			expectError: false,
+			expectedEnabled: map[string]bool{
+				"feature1": true,
+				"feature2": true,
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			// Get tool handler
+			_, handler := ListAvailableFeatures(tc.featureSet, translations.NullTranslationHelper)
+
+			// Create call request
+			request := createMCPRequest(tc.requestArgs)
+
+			// Call handler
+			result, err := handler(context.Background(), request)
+
+			// Verify results
+			if tc.expectError {
+				require.Error(t, err)
+				assert.Contains(t, err.Error(), tc.expectedErrMsg)
+				return
+			}
+
+			require.NoError(t, err)
+
+			// Parse result and get text content
+			textContent := getTextResult(t, result)
+
+			// Unmarshal the result to verify features
+			var returnedFeatures map[string]bool
+			err = json.Unmarshal([]byte(textContent.Text), &returnedFeatures)
+			require.NoError(t, err)
+
+			// Verify the features match what we expect
+			assert.Equal(t, tc.expectedEnabled, returnedFeatures)
 		})
 	}
 }
