@@ -16,9 +16,7 @@ automation and interaction capabilities for developers and tools.
 
 1. To run the server in a container, you will need to have [Docker](https://www.docker.com/) installed.
 2. [Create a GitHub Personal Access Token](https://github.com/settings/personal-access-tokens/new).
-The MCP server can use many of the GitHub APIs, so enable the permissions that you feel comfortable granting your AI tools (to learn more about access tokens, please check out the [documentation](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens)).
-
-
+   The MCP server can use many of the GitHub APIs, so enable the permissions that you feel comfortable granting your AI tools (to learn more about access tokens, please check out the [documentation](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens)).
 
 ## Installation
 
@@ -94,6 +92,75 @@ If you don't have Docker, you can use `go` to build the binary in the
 `cmd/github-mcp-server` directory, and use the `github-mcp-server stdio`
 command with the `GITHUB_PERSONAL_ACCESS_TOKEN` environment variable set to
 your token.
+
+## Features Configuration
+
+The GitHub MCP Server supports enabling or disabling specific groups of functionalities via the `--features` flag. This allows you to control which GitHub API capabilities are available to your AI tools.
+
+### Available Features
+
+The following feature groups are available:
+
+| Feature         | Description                                                   | Default Status |
+| --------------- | ------------------------------------------------------------- | -------------- |
+| `repos`         | Repository-related tools (file operations, branches, commits) | Enabled        |
+| `issues`        | Issue-related tools (create, read, update, comment)           | Enabled        |
+| `search`        | Search functionality (code, repositories, users)              | Enabled        |
+| `pull_requests` | Pull request operations (create, merge, review)               | Enabled        |
+| `code_security` | Code scanning alerts and security features                    | Disabled       |
+| `experiments`   | Experimental features (not considered stable)                 | Disabled       |
+| `everything`    | Special flag to enable all features                           | Disabled       |
+
+### Specifying Features
+
+You can enable specific features in two ways:
+
+1. **Using Command Line Argument**:
+
+   ```bash
+   github-mcp-server --features repos,issues,pull_requests,code_security
+   ```
+
+2. **Using Environment Variable**:
+   ```bash
+   GITHUB_FEATURES="repos,issues,pull_requests,code_security" ./github-mcp-server
+   ```
+
+The environment variable `GITHUB_FEATURES` takes precedence over the command line argument if both are provided.
+
+### Default Enabled Features
+
+By default, the following features are enabled:
+
+- `repos`
+- `issues`
+- `pull_requests`
+- `search`
+
+### Using With Docker
+
+When using Docker, you can pass the features as environment variables:
+
+```bash
+docker run -i --rm \
+  -e GITHUB_PERSONAL_ACCESS_TOKEN=<your-token> \
+  -e GITHUB_FEATURES="repos,issues,pull_requests,code_security,experiments" \
+  ghcr.io/github/github-mcp-server
+```
+
+### The "everything" Feature
+
+The special feature `everything` can be provided to enable all available features regardless of their individual settings:
+
+```bash
+./github-mcp-server --features everything
+```
+
+Or using the environment variable:
+
+```bash
+GITHUB_FEATURES="everything" ./github-mcp-server
+```
 
 ## GitHub Enterprise Server
 
