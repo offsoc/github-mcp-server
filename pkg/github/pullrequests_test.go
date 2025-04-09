@@ -17,7 +17,7 @@ import (
 func Test_GetPullRequest(t *testing.T) {
 	// Verify tool definition once
 	mockClient := github.NewClient(nil)
-	tool, _ := GetPullRequest(mockClient, translations.NullTranslationHelper)
+	tool, _ := GetPullRequest(func(_ context.Context) (*github.Client, error) { return mockClient, nil }, translations.NullTranslationHelper)
 
 	assert.Equal(t, "get_pull_request", tool.Name)
 	assert.NotEmpty(t, tool.Description)
@@ -94,7 +94,7 @@ func Test_GetPullRequest(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			// Setup client with mock
 			client := github.NewClient(tc.mockedClient)
-			_, handler := GetPullRequest(client, translations.NullTranslationHelper)
+			_, handler := GetPullRequest(func(_ context.Context) (*github.Client, error) { return client, nil }, translations.NullTranslationHelper)
 
 			// Create call request
 			request := createMCPRequest(tc.requestArgs)
@@ -129,7 +129,7 @@ func Test_GetPullRequest(t *testing.T) {
 func Test_UpdatePullRequest(t *testing.T) {
 	// Verify tool definition once
 	mockClient := github.NewClient(nil)
-	tool, _ := UpdatePullRequest(mockClient, translations.NullTranslationHelper)
+	tool, _ := UpdatePullRequest(func(_ context.Context) (*github.Client, error) { return mockClient, nil }, translations.NullTranslationHelper)
 
 	assert.Equal(t, "update_pull_request", tool.Name)
 	assert.NotEmpty(t, tool.Description)
@@ -257,7 +257,7 @@ func Test_UpdatePullRequest(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			// Setup client with mock
 			client := github.NewClient(tc.mockedClient)
-			_, handler := UpdatePullRequest(client, translations.NullTranslationHelper)
+			_, handler := UpdatePullRequest(func(_ context.Context) (*github.Client, error) { return client, nil }, translations.NullTranslationHelper)
 
 			// Create call request
 			request := createMCPRequest(tc.requestArgs)
@@ -311,7 +311,7 @@ func Test_UpdatePullRequest(t *testing.T) {
 func Test_ListPullRequests(t *testing.T) {
 	// Verify tool definition once
 	mockClient := github.NewClient(nil)
-	tool, _ := ListPullRequests(mockClient, translations.NullTranslationHelper)
+	tool, _ := ListPullRequests(func(_ context.Context) (*github.Client, error) { return mockClient, nil }, translations.NullTranslationHelper)
 
 	assert.Equal(t, "list_pull_requests", tool.Name)
 	assert.NotEmpty(t, tool.Description)
@@ -403,7 +403,7 @@ func Test_ListPullRequests(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			// Setup client with mock
 			client := github.NewClient(tc.mockedClient)
-			_, handler := ListPullRequests(client, translations.NullTranslationHelper)
+			_, handler := ListPullRequests(func(_ context.Context) (*github.Client, error) { return client, nil }, translations.NullTranslationHelper)
 
 			// Create call request
 			request := createMCPRequest(tc.requestArgs)
@@ -441,7 +441,7 @@ func Test_ListPullRequests(t *testing.T) {
 func Test_MergePullRequest(t *testing.T) {
 	// Verify tool definition once
 	mockClient := github.NewClient(nil)
-	tool, _ := MergePullRequest(mockClient, translations.NullTranslationHelper)
+	tool, _ := MergePullRequest(func(_ context.Context) (*github.Client, error) { return mockClient, nil }, translations.NullTranslationHelper)
 
 	assert.Equal(t, "merge_pull_request", tool.Name)
 	assert.NotEmpty(t, tool.Description)
@@ -518,7 +518,7 @@ func Test_MergePullRequest(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			// Setup client with mock
 			client := github.NewClient(tc.mockedClient)
-			_, handler := MergePullRequest(client, translations.NullTranslationHelper)
+			_, handler := MergePullRequest(func(_ context.Context) (*github.Client, error) { return client, nil }, translations.NullTranslationHelper)
 
 			// Create call request
 			request := createMCPRequest(tc.requestArgs)
@@ -552,7 +552,7 @@ func Test_MergePullRequest(t *testing.T) {
 func Test_GetPullRequestFiles(t *testing.T) {
 	// Verify tool definition once
 	mockClient := github.NewClient(nil)
-	tool, _ := GetPullRequestFiles(mockClient, translations.NullTranslationHelper)
+	tool, _ := GetPullRequestFiles(func(_ context.Context) (*github.Client, error) { return mockClient, nil }, translations.NullTranslationHelper)
 
 	assert.Equal(t, "get_pull_request_files", tool.Name)
 	assert.NotEmpty(t, tool.Description)
@@ -630,7 +630,7 @@ func Test_GetPullRequestFiles(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			// Setup client with mock
 			client := github.NewClient(tc.mockedClient)
-			_, handler := GetPullRequestFiles(client, translations.NullTranslationHelper)
+			_, handler := GetPullRequestFiles(func(_ context.Context) (*github.Client, error) { return client, nil }, translations.NullTranslationHelper)
 
 			// Create call request
 			request := createMCPRequest(tc.requestArgs)
@@ -668,7 +668,7 @@ func Test_GetPullRequestFiles(t *testing.T) {
 func Test_GetPullRequestStatus(t *testing.T) {
 	// Verify tool definition once
 	mockClient := github.NewClient(nil)
-	tool, _ := GetPullRequestStatus(mockClient, translations.NullTranslationHelper)
+	tool, _ := GetPullRequestStatus(func(_ context.Context) (*github.Client, error) { return mockClient, nil }, translations.NullTranslationHelper)
 
 	assert.Equal(t, "get_pull_request_status", tool.Name)
 	assert.NotEmpty(t, tool.Description)
@@ -790,7 +790,7 @@ func Test_GetPullRequestStatus(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			// Setup client with mock
 			client := github.NewClient(tc.mockedClient)
-			_, handler := GetPullRequestStatus(client, translations.NullTranslationHelper)
+			_, handler := GetPullRequestStatus(func(_ context.Context) (*github.Client, error) { return client, nil }, translations.NullTranslationHelper)
 
 			// Create call request
 			request := createMCPRequest(tc.requestArgs)
@@ -829,7 +829,7 @@ func Test_GetPullRequestStatus(t *testing.T) {
 func Test_UpdatePullRequestBranch(t *testing.T) {
 	// Verify tool definition once
 	mockClient := github.NewClient(nil)
-	tool, _ := UpdatePullRequestBranch(mockClient, translations.NullTranslationHelper)
+	tool, _ := UpdatePullRequestBranch(func(_ context.Context) (*github.Client, error) { return mockClient, nil }, translations.NullTranslationHelper)
 
 	assert.Equal(t, "update_pull_request_branch", tool.Name)
 	assert.NotEmpty(t, tool.Description)
@@ -917,7 +917,7 @@ func Test_UpdatePullRequestBranch(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			// Setup client with mock
 			client := github.NewClient(tc.mockedClient)
-			_, handler := UpdatePullRequestBranch(client, translations.NullTranslationHelper)
+			_, handler := UpdatePullRequestBranch(func(_ context.Context) (*github.Client, error) { return client, nil }, translations.NullTranslationHelper)
 
 			// Create call request
 			request := createMCPRequest(tc.requestArgs)
@@ -945,7 +945,7 @@ func Test_UpdatePullRequestBranch(t *testing.T) {
 func Test_GetPullRequestComments(t *testing.T) {
 	// Verify tool definition once
 	mockClient := github.NewClient(nil)
-	tool, _ := GetPullRequestComments(mockClient, translations.NullTranslationHelper)
+	tool, _ := GetPullRequestComments(func(_ context.Context) (*github.Client, error) { return mockClient, nil }, translations.NullTranslationHelper)
 
 	assert.Equal(t, "get_pull_request_comments", tool.Name)
 	assert.NotEmpty(t, tool.Description)
@@ -1033,7 +1033,7 @@ func Test_GetPullRequestComments(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			// Setup client with mock
 			client := github.NewClient(tc.mockedClient)
-			_, handler := GetPullRequestComments(client, translations.NullTranslationHelper)
+			_, handler := GetPullRequestComments(func(_ context.Context) (*github.Client, error) { return client, nil }, translations.NullTranslationHelper)
 
 			// Create call request
 			request := createMCPRequest(tc.requestArgs)
@@ -1072,7 +1072,7 @@ func Test_GetPullRequestComments(t *testing.T) {
 func Test_GetPullRequestReviews(t *testing.T) {
 	// Verify tool definition once
 	mockClient := github.NewClient(nil)
-	tool, _ := GetPullRequestReviews(mockClient, translations.NullTranslationHelper)
+	tool, _ := GetPullRequestReviews(func(_ context.Context) (*github.Client, error) { return mockClient, nil }, translations.NullTranslationHelper)
 
 	assert.Equal(t, "get_pull_request_reviews", tool.Name)
 	assert.NotEmpty(t, tool.Description)
@@ -1156,7 +1156,7 @@ func Test_GetPullRequestReviews(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			// Setup client with mock
 			client := github.NewClient(tc.mockedClient)
-			_, handler := GetPullRequestReviews(client, translations.NullTranslationHelper)
+			_, handler := GetPullRequestReviews(func(_ context.Context) (*github.Client, error) { return client, nil }, translations.NullTranslationHelper)
 
 			// Create call request
 			request := createMCPRequest(tc.requestArgs)
@@ -1195,7 +1195,7 @@ func Test_GetPullRequestReviews(t *testing.T) {
 func Test_CreatePullRequestReview(t *testing.T) {
 	// Verify tool definition once
 	mockClient := github.NewClient(nil)
-	tool, _ := CreatePullRequestReview(mockClient, translations.NullTranslationHelper)
+	tool, _ := CreatePullRequestReview(func(_ context.Context) (*github.Client, error) { return mockClient, nil }, translations.NullTranslationHelper)
 
 	assert.Equal(t, "create_pull_request_review", tool.Name)
 	assert.NotEmpty(t, tool.Description)
@@ -1523,7 +1523,7 @@ func Test_CreatePullRequestReview(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			// Setup client with mock
 			client := github.NewClient(tc.mockedClient)
-			_, handler := CreatePullRequestReview(client, translations.NullTranslationHelper)
+			_, handler := CreatePullRequestReview(func(_ context.Context) (*github.Client, error) { return client, nil }, translations.NullTranslationHelper)
 
 			// Create call request
 			request := createMCPRequest(tc.requestArgs)
@@ -1566,7 +1566,7 @@ func Test_CreatePullRequestReview(t *testing.T) {
 func Test_CreatePullRequest(t *testing.T) {
 	// Verify tool definition once
 	mockClient := github.NewClient(nil)
-	tool, _ := CreatePullRequest(mockClient, translations.NullTranslationHelper)
+	tool, _ := CreatePullRequest(func(_ context.Context) (*github.Client, error) { return mockClient, nil }, translations.NullTranslationHelper)
 
 	assert.Equal(t, "create_pull_request", tool.Name)
 	assert.NotEmpty(t, tool.Description)
@@ -1678,7 +1678,7 @@ func Test_CreatePullRequest(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			// Setup client with mock
 			client := github.NewClient(tc.mockedClient)
-			_, handler := CreatePullRequest(client, translations.NullTranslationHelper)
+			_, handler := CreatePullRequest(func(_ context.Context) (*github.Client, error) { return client, nil }, translations.NullTranslationHelper)
 
 			// Create call request
 			request := createMCPRequest(tc.requestArgs)

@@ -234,7 +234,7 @@ func Test_repositoryResourceContentsHandler(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			client := github.NewClient(tc.mockedClient)
-			handler := RepositoryResourceContentsHandler(client)
+			handler := RepositoryResourceContentsHandler((func(_ context.Context) (*github.Client, error) { return client, nil }))
 
 			request := mcp.ReadResourceRequest{
 				Params: struct {

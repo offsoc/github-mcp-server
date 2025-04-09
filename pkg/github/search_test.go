@@ -16,7 +16,7 @@ import (
 func Test_SearchRepositories(t *testing.T) {
 	// Verify tool definition once
 	mockClient := github.NewClient(nil)
-	tool, _ := SearchRepositories(mockClient, translations.NullTranslationHelper)
+	tool, _ := SearchRepositories(func(_ context.Context) (*github.Client, error) { return mockClient, nil }, translations.NullTranslationHelper)
 
 	assert.Equal(t, "search_repositories", tool.Name)
 	assert.NotEmpty(t, tool.Description)
@@ -122,7 +122,7 @@ func Test_SearchRepositories(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			// Setup client with mock
 			client := github.NewClient(tc.mockedClient)
-			_, handler := SearchRepositories(client, translations.NullTranslationHelper)
+			_, handler := SearchRepositories(func(_ context.Context) (*github.Client, error) { return client, nil }, translations.NullTranslationHelper)
 
 			// Create call request
 			request := createMCPRequest(tc.requestArgs)
@@ -163,7 +163,7 @@ func Test_SearchRepositories(t *testing.T) {
 func Test_SearchCode(t *testing.T) {
 	// Verify tool definition once
 	mockClient := github.NewClient(nil)
-	tool, _ := SearchCode(mockClient, translations.NullTranslationHelper)
+	tool, _ := SearchCode(func(_ context.Context) (*github.Client, error) { return mockClient, nil }, translations.NullTranslationHelper)
 
 	assert.Equal(t, "search_code", tool.Name)
 	assert.NotEmpty(t, tool.Description)
@@ -273,7 +273,7 @@ func Test_SearchCode(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			// Setup client with mock
 			client := github.NewClient(tc.mockedClient)
-			_, handler := SearchCode(client, translations.NullTranslationHelper)
+			_, handler := SearchCode(func(_ context.Context) (*github.Client, error) { return client, nil }, translations.NullTranslationHelper)
 
 			// Create call request
 			request := createMCPRequest(tc.requestArgs)
@@ -314,7 +314,7 @@ func Test_SearchCode(t *testing.T) {
 func Test_SearchUsers(t *testing.T) {
 	// Verify tool definition once
 	mockClient := github.NewClient(nil)
-	tool, _ := SearchUsers(mockClient, translations.NullTranslationHelper)
+	tool, _ := SearchUsers(func(_ context.Context) (*github.Client, error) { return mockClient, nil }, translations.NullTranslationHelper)
 
 	assert.Equal(t, "search_users", tool.Name)
 	assert.NotEmpty(t, tool.Description)
@@ -428,7 +428,7 @@ func Test_SearchUsers(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			// Setup client with mock
 			client := github.NewClient(tc.mockedClient)
-			_, handler := SearchUsers(client, translations.NullTranslationHelper)
+			_, handler := SearchUsers(func(_ context.Context) (*github.Client, error) { return client, nil }, translations.NullTranslationHelper)
 
 			// Create call request
 			request := createMCPRequest(tc.requestArgs)
